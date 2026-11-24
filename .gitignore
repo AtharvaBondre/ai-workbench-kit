@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
+profiles.json
+private/
+reports/
+*.zip
+dist/
+.venv/
+.pytest_cache/
+*.log
+*.pem
+*.key
+credentials*

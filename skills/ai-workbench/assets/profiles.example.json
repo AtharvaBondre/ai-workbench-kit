@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "profiles": {
+    "bedrock": {
+      "kind": "bedrock",
+      "aws_profile": "REPLACE_NAMED_PROFILE",
+      "region": "REPLACE_REGION",
+      "account_id": "REPLACE_12_DIGIT_ACCOUNT",
+      "principal_arn": "REPLACE_EXACT_PRINCIPAL_ARN",
+      "model": "REPLACE_AVAILABLE_INFERENCE_PROFILE_ID"
+    },
+    "foundry": {
+      "kind": "foundry",
+      "resource": "REPLACE_FOUNDRY_RESOURCE_NAME",
+      "subscription_id": "REPLACE_SUBSCRIPTION_ID",
+      "tenant_id": "REPLACE_TENANT_ID",
+      "azure_account": "person@example.com",
+      "key_env": "WORKBENCH_FOUNDRY_KEY",
+      "model": "REPLACE_DEPLOYMENT_NAME"
+    },
+    "api": {
+      "kind": "api",
+      "keychain_service": "ai-workbench-anthropic",
+      "keychain_account": "personal-api",
+      "model": "REPLACE_AVAILABLE_API_MODEL_ID"
+    },
+    "cloud-pro": {
+      "kind": "subscription",
+      "email": "person@example.com",
+      "organization_id": "REPLACE_PERSONAL_ORGANIZATION_ID"
+    },
+    "cloud-ultra": {
+      "kind": "subscription",
+      "email": "other-person@example.com",
+      "organization_id": "REPLACE_OTHER_ORGANIZATION_ID"
+    }
+  }
+}

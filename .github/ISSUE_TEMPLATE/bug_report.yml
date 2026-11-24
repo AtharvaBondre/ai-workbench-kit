@@ -1,0 +1,38 @@
+name: Bug report
+description: Report a reproducible toolkit problem using synthetic, redacted details.
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: Never include keys, tokens, real profile files, transcripts, or unredacted screenshots. For vulnerabilities, use the repository Security tab.
+  - type: input
+    id: version
+    attributes:
+      label: Kit version and platform
+      placeholder: v0.1.0, macOS, Python 3.11
+    validations:
+      required: true
+  - type: dropdown
+    id: workflow
+    attributes:
+      label: Affected workflow
+      options:
+        - Documentation / visual guide
+        - Script
+        - AI skill
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce with synthetic data
+      description: Include the command or guide step, expected result, and actual result.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed credentials, private account details, local personal paths and session content.
+          required: true
