@@ -6,22 +6,33 @@
 
 **Set up Claude and Codex, switch Claude access routes, and keep local work organised—with a guide, ordinary scripts, or an AI assistant.**
 
-Read the **[online visual guide](https://atharvabondre.github.io/ai-workbench-kit/)** or download the **[latest release](https://github.com/AtharvaBondre/ai-workbench-kit/releases/latest)**. After extracting the ZIP, open **[START-HERE.html](START-HERE.html)** for the same guide offline. It works offline, uses no external fonts or analytics, and needs no account. This is a portable starter kit, version **0.1.0**, prepared on **24 November 2026**.
+Read the **[online visual guide](https://atharvabondre.github.io/ai-workbench-kit/)** or download the **[latest release](https://github.com/AtharvaBondre/ai-workbench-kit/releases/latest)**. After extracting the ZIP, open **[START-HERE.html](START-HERE.html)** for the same guide offline. It works offline, uses no external fonts or analytics, and needs no account. This is a portable starter kit, version **0.2.0**, prepared on **24 November 2026**.
 
 ## Choose how you want to use it
 
 | Option | Best for | Start here |
 |---|---|---|
-| **Documentation** | “Explain it and let me click through Desktop.” | [Beginner walkthrough](skills/ai-workbench/references/getting-started.md) → [Desktop setup](skills/ai-workbench/references/desktop.md) |
-| **Non-AI scripts** | “Give me repeatable checks that do not spend AI tokens.” | `python3 workbench.py doctor` → [Script guide](skills/ai-workbench/references/scripts.md) |
+| **Documentation** | “Explain it and let me click through Desktop.” | [Choose your path](skills/ai-workbench/references/choose-path.md) → [Desktop setup](skills/ai-workbench/references/desktop.md) |
+| **Non-AI scripts** | “Give me repeatable checks that do not spend AI tokens.” | `python3 workbench.py configure` → [Complete recipes](skills/ai-workbench/references/recipes.md) |
 | **AI skill** | “Let my assistant guide or operate the setup.” | [Install and use the skill](skills/ai-workbench/references/ai-skill.md) |
 
 All three options follow the **same procedures and use the same code**. You can mix them. The AI option consumes your assistant's normal allowance; the scripts themselves do not call a model. An explicitly launched Claude CLI uses whichever provider you select.
+
+## Who this is for
+
+- **New or nontechnical users:** choose Claude Desktop or Codex Desktop; skip Python and JSON.
+- **Technical users new to setup:** use the guided configuration and field reference.
+- **Documentation-only users:** the complete visual guide works online and offline.
+- **No-AI users:** deterministic helpers, full command recipes and explicit previews.
+- **AI-assisted users:** one portable skill follows the same guides and scripts, with a prompt fallback when skills are unavailable.
+
+Start at [Choose your path](skills/ai-workbench/references/choose-path.md). Windows currently uses the manual documentation route; live model access still depends on the user’s authorised account.
 
 ## What is included
 
 - Claude Desktop and Claude Code installation, first-run checks and model selection guidance.
 - Five named Claude access profiles: **AWS Bedrock, Azure Foundry, Anthropic API, subscription account A and subscription account B**. Historical “Pro”/“Ultra” names are editable labels; current availability and billing must be checked with the provider.
+- Guided creation of one profile without JSON editing, an offline `check-config` command, and a required/optional field reference.
 - Process-scoped CLI launchers with preview, identity checks and credential references. No shell startup-file edits.
 - A Desktop switching and rollback checklist. **A CLI wrapper does not switch the Desktop app.**
 - Codex setup guidance and a read-only configuration review.
@@ -56,6 +67,9 @@ To install the AI option, follow the [skill guide](skills/ai-workbench/reference
 
 | I want to… | Read |
 |---|---|
+| Choose a route for my experience level | [Choose your path](skills/ai-workbench/references/choose-path.md) |
+| Understand every configuration field | [Configuration explained](skills/ai-workbench/references/configuration.md) |
+| Follow a complete command sequence | [Recipes](skills/ai-workbench/references/recipes.md) |
 | Set up for the first time | [Getting started](skills/ai-workbench/references/getting-started.md) |
 | Use the Desktop UI | [Desktop walkthrough](skills/ai-workbench/references/desktop.md) |
 | Understand the five access profiles | [Providers and billing routes](skills/ai-workbench/references/providers.md) |

@@ -160,7 +160,7 @@ class WorkbenchTests(unittest.TestCase):
         self.w.install_skill(self.root/'skills',True)
         import subprocess
         r=subprocess.run([os.sys.executable,str(self.root/'skills/ai-workbench/workbench.py'),'--version'],capture_output=True,text=True)
-        self.assertEqual(r.returncode,0); self.assertIn('0.1.0',r.stdout)
+        self.assertEqual(r.returncode,0); self.assertIn(self.w.VERSION,r.stdout)
 
     def test_model_cannot_be_a_cli_flag(self):
         with self.assertRaises(self.w.SafeError): self.w.validate_profile({'kind':'api','key_env':'EXAMPLE_KEY','model':'--dangerously-skip-permissions'})

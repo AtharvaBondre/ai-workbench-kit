@@ -9,15 +9,18 @@ import argparse
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 import hashlib
+import getpass
+import warnings
 import json
 import os
 from pathlib import Path
 import re
 import shutil
+import shlex
 import subprocess
 import sys
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 SKILL = Path(__file__).resolve().parents[1]
 class SafeError(Exception): pass
 
@@ -55,19 +58,24 @@ REQUIRED = {
     'foundry': {'resource','subscription_id','tenant_id','azure_account'},
 }
 
+def looks_like_secret(value):
+    return bool(re.search(r'\b(?:sk-ant-|github_pat_|ghp_)[A-Za-z0-9_-]{15,}|\b(?:AKIA|ASIA)[A-Z0-9]{16}\b|-----BEGIN .*PRIVATE KEY-----',value))
+
 def validate_profile(p):
-    if not isinstance(p,dict) or p.get('kind') not in FIELDS: raise SafeError('Unknown access kind.')
+    if not isinstance(p,dict) or not isinstance(p.get('kind'),str) or p.get('kind') not in FIELDS: raise SafeError('Unknown access kind.')
     kind=p['kind']
     if set(p)-(COMMON|FIELDS[kind]): raise SafeError('Unsupported profile fields. Store credential references, never literal secrets.')
-    for name in REQUIRED[kind]:
-        if not isinstance(p.get(name),str) or not p[name].strip(): raise SafeError('Profile is missing required identity or routing fields.')
-    for value in p.values():
-        if not isinstance(value,str) or '\x00' in value or '\n' in value: raise SafeError('Profile values must be single-line strings.')
-        if value.startswith('REPLACE_') or '<' in value: raise SafeError('Replace all example placeholders before use.')
+    missing=sorted(name for name in REQUIRED[kind] if not isinstance(p.get(name),str) or not p[name].strip())
+    if missing: raise SafeError('Missing required fields: '+', '.join(missing)+'. See the configuration reference for where to find them.')
+    for field,value in p.items():
+        if not isinstance(value,str) or '\x00' in value or '\n' in value: raise SafeError('Field '+field+' must be a single-line string.')
+        if looks_like_secret(value): raise SafeError('A value looks like a credential. Enter only a credential reference, never the secret itself.')
+        if value.startswith('REPLACE_') or '<' in value: raise SafeError('Replace the example placeholder in field '+field+'. See the configuration reference.')
     if 'model' in p and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:/\[\]-]*',p['model']): raise SafeError('Model must be an identifier, not an option or command.')
     if kind in ('api','foundry'):
         by_env='key_env' in p
         by_keychain='keychain_service' in p and 'keychain_account' in p
+        if by_keychain and (not p['keychain_service'].strip() or not p['keychain_account'].strip()):raise SafeError('keychain_service and keychain_account must both be nonempty labels.')
         if by_env == by_keychain: raise SafeError('Choose exactly one key reference: key_env OR keychain_service plus keychain_account.')
         if by_env and not re.fullmatch(r'[A-Z_][A-Z0-9_]*',p['key_env']): raise SafeError('Invalid environment variable name.')
         if not by_keychain and ({'keychain_service','keychain_account'} & set(p)): raise SafeError('Incomplete Keychain reference.')
@@ -76,6 +84,84 @@ def validate_profile(p):
         if f":{p['account_id']}:" not in p['principal_arn']: raise SafeError('Principal ARN does not belong to expected AWS account.')
     if kind=='foundry' and not re.fullmatch(r'[a-zA-Z0-9-]+',p['resource']): raise SafeError('Foundry resource must be a resource name, not a URL.')
     return p
+
+def check_config(path):
+    """Validate structure only; no secret lookup, app launch or provider call."""
+    result={'valid':False,'profiles':[],'errors':[],'authentication':'not checked',
+            'notice':'Offline structure check only. Account access, settings conflicts and model availability are separate checks.'}
+    try:
+        data=read_json(path)
+        if not isinstance(data,dict) or set(data)!={'version','profiles'} or data.get('version')!=1 or not isinstance(data.get('profiles'),dict) or not data['profiles']:
+            raise SafeError('Use version 1 and a nonempty profiles object; no other top-level fields are supported.')
+        for name,profile in data['profiles'].items():
+            if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,47}',name) or looks_like_secret(name):
+                result['errors'].append('Profile names must be short lowercase labels using letters, numbers and hyphens.');continue
+            try:
+                validate_profile(profile)
+                result['profiles'].append({'name':name,'kind':profile['kind'],'structure':'valid'})
+            except SafeError as error:
+                result['profiles'].append({'name':name,'structure':'invalid','error':str(error)})
+                result['errors'].append('Invalid profile: '+name)
+        result['valid']=not result['errors']
+    except SafeError as error:result['errors'].append(str(error))
+    return result
+
+
+def configure(args):
+    """Create a single intent profile through nonsecret, explained questions."""
+    output=Path(args.output).expanduser().absolute()
+    if output.exists() or output.is_symlink():raise SafeError('Profile file already exists. Keep it; choose --output with a new filename. No overwrite or automatic merge.')
+    print('Guided terminal profile setup — no AI, login, provider call or app change.')
+    print('Desktop-only users: use the Desktop guide; this profile will NOT switch Desktop.')
+    print('Enter labels and account identifiers only. Never paste an API key, password or token.')
+    print('Help: references/configuration.md in the ai-workbench skill package. Ctrl+C cancels.')
+    def ask(label,default=None,required=True):
+        suffix=' ['+default+']' if default is not None else ''
+        while True:
+            try:value=input(label+suffix+': ').strip()
+            except (EOFError,KeyboardInterrupt):raise SafeError('Setup cancelled; no profile was saved.')
+            value=value or (default if default is not None else '')
+            if looks_like_secret(value):raise SafeError('Credential-like input rejected. Use a reference name, not a secret. Nothing saved.')
+            if value or not required:return value
+            print('This field is required. See the configuration guide rather than guessing.')
+    def choice(label,options,default=None):
+        while True:
+            value=ask(label,default)
+            if value in options:return value
+            print('Choose one of: '+', '.join(options)+'.')
+    selected=choice('Access: 1 Subscription account, 2 Anthropic API, 3 AWS Bedrock, 4 Azure Foundry',{'1','2','3','4'})
+    kind={'1':'subscription','2':'api','3':'bedrock','4':'foundry'}[selected]
+    name=ask('Your short profile label (not an account, key, or model)',kind)
+    if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,47}',name):raise SafeError('Use a lowercase label with letters, numbers and hyphens, up to 48 characters.')
+    p={'kind':kind}
+    questions={
+      'subscription': [('email','Signed-in email — from the intended Claude account'),('organization_id','Organisation ID — orgId from supported Claude auth status; not the display name')],
+      'bedrock': [('aws_profile','Named AWS CLI profile — from your approved profile configuration'),('region','Approved runtime region — from the model deployment/account owner'),('account_id','Expected 12-digit AWS account ID — from your account guardrails'),('principal_arn','Expected exact principal ARN — from approved identity/guardrails')],
+      'foundry': [('resource','Foundry resource name — from resource Overview; not a URL'),('subscription_id','Azure subscription ID — from the approved resource/account'),('tenant_id','Azure tenant ID — from the approved directory/account'),('azure_account','Expected Azure CLI user/account name — from approved account details')],
+      'api': [],
+    }
+    for field,label in questions[kind]:p[field]=ask(label)
+    if kind in ('api','foundry'):
+        options={'1','2'} if sys.platform=='darwin' else {'1'}
+        method=choice('Credential reference: 1 Environment variable NAME'+(', 2 Existing macOS Keychain entry' if '2' in options else ''),options,'1')
+        if method=='1':p['key_env']=ask('Environment variable NAME (load it privately, or use --ask-key at launch without setting it)')
+        else:
+            p['keychain_service']=ask('Existing Keychain generic-password service/name')
+            p['keychain_account']=ask('Existing Keychain generic-password account label')
+    model=ask('Optional verified model/deployment ID; Enter keeps the client/provider default (not necessarily cheapest)',required=False)
+    if model:p['model']=model
+    validate_profile(p)
+    payload={'version':1,'profiles':{name:p}}
+    print('Review this private configuration (references only):')
+    print(json.dumps(payload,indent=2));print('New file: '+str(output))
+    if ask('Type save to create this file, or cancel to stop','cancel').lower()!='save':
+        print('Nothing saved. No folders or settings changed.');return
+    output.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+    private_json(output,payload)
+    print('Saved a private profile file. Desktop and existing sessions are unchanged.')
+    print('Next: python3 workbench.py check-config --config '+shlex.quote(str(output)))
+    print('Then preview launch using this profile label, the same config path, and your original project folder.')
+
 
 def routing_key(key):
     return key.startswith(('ANTHROPIC_', 'CLAUDE_CODE_USE_', 'CLAUDE_CODE_OAUTH_', 'AWS_', 'AZURE_')) or key in {'CLAUDE_CODE_API_KEY','CLAUDE_CODE_SKIP_BEDROCK_AUTH','CLAUDE_CODE_SKIP_FOUNDRY_AUTH','CLAUDE_CODE_SKIP_VERTEX_AUTH','DISABLE_PROMPT_CACHING'} or key.startswith('DISABLE_PROMPT_CACHING_')
@@ -147,11 +233,23 @@ def load_key(p,source):
     if not value or '\n' in value or '\x00' in value: raise SafeError('Referenced credential is missing or invalid; no secret was printed.')
     return value
 
+def prompt_key():
+    if not sys.stdin.isatty() or not sys.stderr.isatty():raise SafeError('--ask-key requires an interactive terminal with hidden input. Never pipe a key into this command.')
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter('error',getpass.GetPassWarning)
+            value=getpass.getpass('API key (hidden; used for this launch only, not saved): ')
+    except (EOFError,KeyboardInterrupt,getpass.GetPassWarning):raise SafeError('Hidden credential entry cancelled or unavailable; no client launched.')
+    if not value or '\n' in value or '\x00' in value:raise SafeError('Credential input is empty or invalid; no client launched.')
+    return value
+
+
 def launch(args):
     if os.name=='nt': raise SafeError('CLI launch is supported on macOS/Linux only; use the Desktop guide on Windows.')
     config=read_json(args.config)
     if not isinstance(config,dict) or not isinstance(config.get('profiles'),dict) or config.get('version')!=1 or args.profile not in config.get('profiles',{}): raise SafeError('Unknown profile or config version.')
     p=validate_profile(config['profiles'][args.profile])
+    if getattr(args,'ask_key',False) and (p['kind'] not in ('api','foundry') or 'key_env' not in p):raise SafeError('--ask-key is only for API/Foundry profiles using a key_env reference.')
     project=Path(args.project).expanduser().resolve()
     if not project.is_dir(): raise SafeError('Original project directory is missing. Restore or locate it; do not silently re-anchor.')
     env=child_environment(os.environ,p)
@@ -171,7 +269,7 @@ def launch(args):
     if not shutil.which('claude'): raise SafeError('Claude CLI not found. Install from the official source or use Desktop guidance.')
     verify_identity(p,env,project)
     if p['kind'] in ('api','foundry'):
-        key=load_key(p,os.environ)
+        key=prompt_key() if getattr(args,'ask_key',False) else load_key(p,os.environ)
         if 'key_env' in p: env.pop(p['key_env'],None)
         env['ANTHROPIC_API_KEY' if p['kind']=='api' else 'ANTHROPIC_FOUNDRY_API_KEY']=key
     # Do not pass arbitrary extra CLI flags, provider fallbacks or shell commands.
@@ -356,9 +454,12 @@ def parser():
     p=argparse.ArgumentParser(description=__doc__); p.add_argument('--version',action='version',version=VERSION)
     sub=p.add_subparsers(dest='command',required=True)
     sub.add_parser('doctor',help='Offline prerequisite inventory; changes nothing')
+    q=sub.add_parser('configure',help='Guided nonsecret profile setup; writes only after typing save'); q.add_argument('--output',default=str(Path.home()/'.config/ai-workbench/profiles.json'))
+    q=sub.add_parser('check-config',help='Offline profile validation without credentials or provider calls'); q.add_argument('--config',required=True)
     q=sub.add_parser('init',help='Create a profile template, never overwrite'); q.add_argument('--output',required=True)
     q=sub.add_parser('launch',help='Preview a terminal wrapper; Desktop is unchanged')
     q.add_argument('profile'); q.add_argument('--config',required=True); q.add_argument('--project',required=True); q.add_argument('--resume')
+    q.add_argument('--ask-key',action='store_true',help='With --execute, enter API/Foundry key privately for this launch only; requires key_env profile')
     q.add_argument('--execute',action='store_true'); q.add_argument('--confirm-idle',action='store_true'); q.add_argument('--reviewed-provider-policy',action='store_true')
     q=sub.add_parser('snapshot',help='Save hashes and path references, not copies'); q.add_argument('paths',nargs='+'); q.add_argument('--output',required=True)
     q=sub.add_parser('compare',help='Compare an earlier manifest'); q.add_argument('manifest'); q.add_argument('--output')
@@ -372,6 +473,9 @@ def main():
     args=parser().parse_args()
     try:
         if args.command=='doctor': print(json.dumps(doctor(),indent=2))
+        elif args.command=='configure': configure(args)
+        elif args.command=='check-config':
+            report=check_config(args.config); print(json.dumps(report,indent=2)); return 0 if report['valid'] else 2
         elif args.command=='init': private_json(args.output,read_json(SKILL/'assets/profiles.example.json')); print('Created private profile template. Replace placeholders for only the routes you use.')
         elif args.command=='launch': launch(args)
         elif args.command=='snapshot': private_json(args.output,snapshot(args.paths)); print('Created reference manifest; no source files copied.')

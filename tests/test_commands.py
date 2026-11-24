@@ -69,9 +69,22 @@ class CommandTests(unittest.TestCase):
 
     def test_preview_never_looks_up_credentials_or_runs_identity(self):
         config=self.root/'profiles.json'; config.write_text(json.dumps({'version':1,'profiles':{'api':{'kind':'api','key_env':'MISSING'}}}))
-        args=argparse.Namespace(config=str(config),profile='api',project=str(self.project),resume=None,execute=False)
-        with patch.dict(os.environ,{'HOME':str(self.root)},clear=True), patch.object(self.w,'settings_paths',return_value=[]), patch.object(self.w,'verify_identity') as identity, patch.object(self.w,'load_key') as key, contextlib.redirect_stdout(io.StringIO()): self.w.launch(args)
-        identity.assert_not_called(); key.assert_not_called()
+        args=argparse.Namespace(config=str(config),profile='api',project=str(self.project),resume=None,execute=False,ask_key=True)
+        with patch.dict(os.environ,{'HOME':str(self.root)},clear=True), patch.object(self.w,'settings_paths',return_value=[]), patch.object(self.w,'verify_identity') as identity, patch.object(self.w,'load_key') as key, patch.object(self.w,'prompt_key') as prompt, contextlib.redirect_stdout(io.StringIO()): self.w.launch(args)
+        identity.assert_not_called(); key.assert_not_called(); prompt.assert_not_called()
+
+    def test_asked_key_is_child_only_and_config_unchanged(self):
+        config=self.root/'profiles.json'; config.write_text(json.dumps({'version':1,'profiles':{'api':{'kind':'api','key_env':'NOT_PRELOADED'}}}))
+        original=config.read_bytes(); output=io.StringIO()
+        args=argparse.Namespace(config=str(config),profile='api',project=str(self.project),resume=None,execute=True,confirm_idle=True,ask_key=True)
+        with patch.dict(os.environ,{'HOME':str(self.root)},clear=True), patch.object(self.w,'settings_paths',return_value=[]), patch.object(self.w.shutil,'which',return_value='/fake/claude'), patch.object(self.w,'verify_identity'), patch.object(self.w,'load_key') as loader, patch.object(self.w,'prompt_key',return_value='synthetic-hidden-key') as prompt, patch.object(self.w.subprocess,'call',return_value=0) as child, contextlib.redirect_stdout(output):
+            with self.assertRaises(SystemExit) as ended:self.w.launch(args)
+            self.assertNotIn('ANTHROPIC_API_KEY',os.environ)
+        self.assertEqual(ended.exception.code,0); prompt.assert_called_once(); loader.assert_not_called()
+        self.assertEqual(child.call_args.kwargs['env']['ANTHROPIC_API_KEY'],'synthetic-hidden-key')
+        self.assertNotIn('synthetic-hidden-key',str(child.call_args.args))
+        self.assertNotIn('synthetic-hidden-key',output.getvalue())
+        self.assertEqual(config.read_bytes(),original)
 
     def test_settings_conflict_blocks_child_even_with_execute(self):
         config=self.root/'profiles.json'; config.write_text(json.dumps({'version':1,'profiles':{'api':{'kind':'api','key_env':'MISSING'}}}))

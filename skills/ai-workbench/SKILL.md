@@ -5,14 +5,16 @@ description: Use when setting up Claude or Codex, switching Claude access provid
 
 # AI Workbench
 
-This package offers four workflows using one local deterministic helper. Resolve paths relative to **this SKILL.md**, including when installed outside the original repository. Start with `python3 scripts/workbench.py --help` and the reference for the requested workflow only.
+This package offers four workflows using one local deterministic helper. Resolve paths relative to **this SKILL.md**, including when installed outside the original repository. Start with [Choose your path](references/choose-path.md): identify Claude Desktop, Codex Desktop or terminal, and new setup versus existing work. Desktop-only users do not need Python, CLI checks or profile JSON. For script workflows, use `python3 workbench.py --help` and only the relevant reference.
 
 | User outcome | Read | First action |
 |---|---|---|
-| Set up Desktop or CLI | [Getting started](references/getting-started.md), then [Desktop](references/desktop.md) for GUI users | Run `doctor`; identify the actual app and access route |
+| Set up Desktop or CLI | [Getting started](references/getting-started.md), then [Desktop](references/desktop.md) for GUI users | For Desktop, inspect the app; for scripts, run `doctor`. Choose only the requested route |
 | Switch provider or account | [Switching](references/switching.md) and [Providers](references/providers.md) | Preview `launch` for CLI users; inspect the supported app connection controls for Desktop users |
 | Continue work in another app | [Continuity](references/continuity.md) | Inventory original paths with `snapshot`; draft a small `handoff` per workstream |
 | Reduce cost and inspect use | [Optimisation](references/optimisation.md) | Use `usage` on explicitly selected local files; reconcile provider billing separately |
+
+For script profiles, use [configuration fields](references/configuration.md) and [complete recipes](references/recipes.md). `configure` creates one reviewed profile; `check-config` validates structure offline. Neither proves authentication. Explain required identifiers and optional defaults before asking for values. Secret entry belongs in the user-operated hidden terminal prompt (`--ask-key`) or secret store, never chat.
 
 Command syntax and failure states: [Script reference](references/scripts.md). Privacy/account questions: [Privacy and billing](references/privacy-and-billing.md). Version-sensitive facts: [Compatibility and sources](references/sources.md).
 

@@ -2,6 +2,8 @@
 
 This guide changes the **app you actually use**, not just a terminal wrapper. Control names vary by version. Inspect the current screen and official help; do not edit undocumented database files to force a screen to match these instructions.
 
+New installation? Follow “Start a local Code session” and the account/model checks below. Old-session, previous-profile, grouping and rollback checks apply only if you already have that state.
+
 ## Before changing an existing installation
 
 1. Record the app version, selected account/organisation, current provider and original project folders.
@@ -55,6 +57,8 @@ Install/sign in through [OpenAI's guide](https://developers.openai.com/codex/app
 `codex-review` reads selected TOML fields; it does not prove Desktop's effective settings. Do not overwrite an existing provider definition or log out to save tokens. Match the app's actual model and usage UI with its billing source.
 
 ## Acceptance check before saying “ready”
+
+For a first-time setup, old-session/profile checks are **not applicable**. For an existing setup or migration, they remain required.
 
 - [ ] Correct Desktop app, Code surface, local environment, account, organisation and provider visible.
 - [ ] Selected model responds under the intended billing route.

@@ -9,7 +9,7 @@ body:
     id: version
     attributes:
       label: Kit version and platform
-      placeholder: v0.1.0, macOS, Python 3.11
+      placeholder: v0.2.0, macOS, Python 3.11
     validations:
       required: true
   - type: dropdown

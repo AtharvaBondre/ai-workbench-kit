@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0 — 2026-11-24
+
+### Guided onboarding
+
+- Added a role/surface-based starting guide, full command recipes and a required/optional configuration field reference.
+- Added `configure`: explained nonsecret questions for one profile, preview, explicit save, and overwrite protection.
+- Added `check-config`: offline structure validation with field-specific repair guidance, no key lookup or provider calls.
+- Added `launch --ask-key` for hidden, one-launch API/Foundry key entry in an interactive terminal; no secret arguments or persisted key.
+- Unified the AI skill with Desktop-only and deterministic workflows; Desktop users no longer get routed through mandatory Python/CLI setup.
+- Distinguished first-time setup acceptance checks from existing-session migration checks.
+- Expanded synthetic tests for onboarding, cancellation, configuration validation and hidden-input boundaries.
+
+
 ## 0.1.0 — 2026-11-24
 
 Initial public release.

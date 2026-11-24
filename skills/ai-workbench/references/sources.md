@@ -2,6 +2,8 @@
 
 Prepared **24 November 2026**. Treat this as a versioned starter kit, not a claim that every future app exposes the same settings.
 
+The v0.2 onboarding workflows add no automatic account changes: configuration and validation are local, while hidden key entry only happens during explicit interactive execution.
+
 ## Verification matrix
 
 | Surface | Evidence in this release | Limit |

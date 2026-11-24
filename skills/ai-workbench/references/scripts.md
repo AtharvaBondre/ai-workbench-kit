@@ -8,11 +8,15 @@ python3 workbench.py --help
 
 Inside an installed skill, the same `python3 workbench.py ...` commands work from its directory; `python3 scripts/workbench.py ...` also works. All entrypoints execute the same implementation. The synthetic suite passes on macOS and Ubuntu CI with Python 3.11 and 3.13; live provider compatibility still needs recipient-side verification. Windows users should use the documentation path for this release.
 
+New to terminal setup? Follow the [complete recipes](recipes.md). Need a value explained? Use the [configuration field reference](configuration.md).
+
 ## Commands and side effects
 
 | Command | Reads | Writes / external calls |
 |---|---|---|
 | `doctor` | Executable presence, environment variable names, disk space | None; offline |
+| `configure [--output FILE]` | Explained questions for one route | Preview then explicit `save`; creates a private profile, never logs in |
+| `check-config --config FILE` | Profile JSON | Offline validation only; no key lookup or provider call |
 | `init --output FILE` | Example profile template | One new 0600 file; refuses overwrite |
 | `launch NAME --config FILE --project DIR` | Profile and known settings files | Preview only; no login or key lookup |
 | `launch ... --execute --confirm-idle` | Credentials and identity | Identity checks; starts interactive **terminal** Claude; its subsequent work can cost money |
@@ -23,11 +27,25 @@ Inside an installed skill, the same `python3 workbench.py ...` commands work fro
 | `codex-review --config FILE` | Selected TOML fields | Prints recommendations; no edits |
 | `install-skill --target DIR [--apply]` | Bundled self-contained skill | Preview by default; apply copies only the small skill package, never overwrites |
 
-`--output` requires an existing parent folder. All output files are created exclusively with owner read/write permissions on POSIX. Existing files and destination symlinks are refused. Do not put an output inside a source folder being inventoried. Reports can contain private paths/identifiers; keep them local.
+`--output` requires an existing parent folder, except `configure`, which creates its output parent only after you type `save`. All output files are created exclusively with owner read/write permissions on POSIX. Existing files and destination symlinks are refused. Do not put an output inside a source folder being inventoried. Reports can contain private paths/identifiers; keep them local.
 
 Exit status: **0** successful check/action, **2** stopped safely on configuration/error, **3** a manifest comparison found changed/missing source files. Python argument errors also use 2. A launched Claude process returns its own exit status.
 
-## Make your private profile file
+## Guided setup — recommended
+
+```bash
+python3 workbench.py configure
+```
+
+Choose one access route and enter its identifiers/references. No JSON editing is required. The wizard explains each field, previews the result and writes only when you type `save`. It refuses an existing output; use `--output` with a new filename. The default is `~/.config/ai-workbench/profiles.json`.
+
+```bash
+python3 workbench.py check-config --config "$HOME/.config/ai-workbench/profiles.json"
+```
+
+`valid: true` means structural validation only. It does not establish identity, credential availability, model access or billing.
+
+## Make your private profile file manually — advanced
 
 ```bash
 mkdir -p "$HOME/.config/ai-workbench"
@@ -49,7 +67,7 @@ or, on macOS:
 {"kind":"api","keychain_service":"ai-workbench-anthropic","keychain_account":"personal-api"}
 ```
 
-These are references, **not** the credential. Add the corresponding generic password through Keychain Access or use your existing trusted secret loader. Do not put the secret in a terminal command/history. The script does not create keys or modify Keychain.
+These are references, **not** the credential. The [configuration guide](configuration.md) explains hidden input for one launch, exact Keychain fields and existing secret-loader use. Add the corresponding generic password through Keychain Access or use your existing trusted secret loader. Do not put the secret in a terminal command/history. The script does not create keys or modify Keychain.
 
 ## Preview a route
 
@@ -61,7 +79,7 @@ python3 workbench.py launch api \
 
 A preview does not prove authentication. It lists recognised configuration conflicts by key name, never their values. Relative `CLAUDE_CONFIG_DIR` values are rejected to avoid scanning one store and launching another. The scanner checks user, local, ancestor-project and known managed JSON settings; it cannot attest to remote policy, custom hooks or every future client schema. Review those separately.
 
-For an approved CLI launch add `--execute --confirm-idle`. Bedrock/Foundry also require `--reviewed-provider-policy` after you have read your profile/account rules. It never changes provider account defaults. `--resume` accepts an existing verified Claude CLI session identifier. No arbitrary extra flags are forwarded.
+For an approved CLI launch add `--execute --confirm-idle`. API/Foundry profiles using `key_env` can add `--ask-key` to enter the actual key through a hidden interactive terminal prompt for that launch only. The flag does not prompt or read a key during preview and never accepts a secret as an argument. Bedrock/Foundry also require `--reviewed-provider-policy` after you have read your profile/account rules. It never changes provider account defaults. `--resume` accepts an existing verified Claude CLI session identifier. No arbitrary extra flags are forwarded.
 
 For subscription accounts, `claude auth status --json` must report `loggedIn: true`, `authMethod: "claude.ai"`, matching `email` and `orgId`. Unknown schema stops execution. Do not alter the code to force a match; consult the installed client and supported account flow.
 

@@ -31,7 +31,7 @@ def release_files(root):
     return files
 
 def expected_manifest(root):
-    return {'release':'0.1.0','files':{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in release_files(root) if str(p.relative_to(root))!=MANIFEST}}
+    return {'release':'0.2.0','files':{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in release_files(root) if str(p.relative_to(root))!=MANIFEST}}
 
 def update_manifest(root):
     target=root/MANIFEST;target.parent.mkdir(parents=True,exist_ok=True)

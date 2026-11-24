@@ -2,6 +2,8 @@
 
 You need three things: an app, an authorised way to access a model, and a folder for your work. A model runs at the provider; it is not something you download to your laptop for this setup.
 
+New here? Start with [Choose your path](choose-path.md). Desktop users can skip Python, terminal wrappers and JSON configuration.
+
 ## 1. Choose the experience
 
 - **Claude Desktop, Code tab:** graphical local coding sessions. Choose the local computer environment when you want files and tools on your machine. This is the primary path for people who do not want a terminal.
@@ -12,11 +14,15 @@ Chat, local Code, remote Code and Cowork can have different storage and executio
 
 ## 2. Get the apps from the official source
 
-1. Download Claude Desktop from [Claude's download page](https://claude.ai/download). Install the build for your operating system.
-2. For Codex, follow [OpenAI's app installation guide](https://developers.openai.com/codex/app/).
-3. If you want terminal wrappers, follow [Claude Code's setup guide](https://code.claude.com/docs/en/setup).
-4. For scripts in this kit, install Python 3.11+ from [python.org](https://www.python.org/downloads/). No pip packages are required.
-5. Install AWS CLI or Azure CLI only for the route you actually use. Official installation links are in [sources](sources.md).
+Install **only what your chosen path needs**:
+
+| Your path | Install/open | Skip unless separately needed |
+|---|---|---|
+| Claude Desktop | [Claude Desktop](https://claude.ai/download) | Python, standalone Claude CLI, AWS/Azure CLI |
+| Codex Desktop | [Codex app](https://developers.openai.com/codex/app/) | Claude profile wizard and Claude CLI |
+| Non-AI helper scripts | [Python 3.11+](https://www.python.org/downloads/) | No pip packages needed |
+| Claude terminal wrappers | Python plus [Claude Code CLI](https://code.claude.com/docs/en/setup) | Desktop is optional for this path |
+| Bedrock/Foundry terminal routes | Their required approved CLI/auth prerequisites | Other providers' tools |
 
 Do not install all providers, VMs, Docker, databases, MCP servers or plugins “just in case.” For an existing installation, inventory it before installing another copy. A separately installed CLI may be unnecessary for a Desktop-only workflow.
 
@@ -39,7 +45,7 @@ In Desktop, select Code → local computer → that folder, using the controls a
 
 ## 5. Verify with a small, non-sensitive task
 
-After checking the signed-in account, route and model, create a disposable test session in a test folder. Ask it to describe an empty example file or answer a brief question. This uses tokens. Check the response and the matching provider usage surface. Then open one existing work session, verify its folder and history, and ask it to state the current goal and next unfinished action before authorising new edits.
+After checking the signed-in account, route and model, create a disposable test session in a test folder. Ask it to describe an empty example file or answer a brief question. This uses tokens. Check the response and the matching provider usage surface. If you already have work sessions, then open one, verify its folder and history, and ask it to state the current goal and next unfinished action before authorising new edits. A first-time user with no old work can skip this step.
 
 Success in a new session alone does not prove that every old session resumed correctly.
 
