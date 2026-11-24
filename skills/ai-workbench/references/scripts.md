@@ -6,7 +6,7 @@ These scripts use Python 3.11+ standard library. Run from the extracted project 
 python3 workbench.py --help
 ```
 
-Inside an installed skill, the same `python3 workbench.py ...` commands work from its directory; `python3 scripts/workbench.py ...` also works. All entrypoints execute the same implementation. macOS is the tested host; Linux support is designed in but not yet host-tested. Windows users should use the documentation path for this release.
+Inside an installed skill, the same `python3 workbench.py ...` commands work from its directory; `python3 scripts/workbench.py ...` also works. All entrypoints execute the same implementation. The synthetic suite passes on macOS and Ubuntu CI with Python 3.11 and 3.13; live provider compatibility still needs recipient-side verification. Windows users should use the documentation path for this release.
 
 ## Commands and side effects
 

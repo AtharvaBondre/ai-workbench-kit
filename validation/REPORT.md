@@ -4,6 +4,8 @@ Date: 24 November 2026. Local host: macOS. The public repository also defines an
 
 ## Passed
 
+[Public CI run 45319287002](https://github.com/AtharvaBondre/ai-workbench-kit/actions/runs/45319287002) passed all four combinations: Ubuntu/macOS with Python 3.11/3.13. Provider calls were mocked.
+
 - **31 automated tests**: release inventory exclusions, symlink rejection, manifest drift, internal links, private-data patterns; isolated child routing; all five named profiles; mocked identity/launch orchestration; preview without key lookup; identity mismatch stops; settings conflict stops; null/unknown identity schemas; malformed/incomplete token counters; Claude message deduplication; Codex cumulative deltas; exclusive private writes; manifest append/change/missing detection; original-file preservation; portable skill installation; CLI option-like model rejection.
 - Skill frontmatter validation with the skill-creator validator.
 - All local Markdown reference links resolve.
@@ -24,6 +26,6 @@ python3 scripts/release_check.py
 
 No real provider credentials were used. No billable model test, live sign-in, Desktop setting change, application-store mutation, real session import or account migration was performed for this release. This is a tested local helper and guidance kit, not a certification that all providers work in a particular account or Desktop build.
 
-Desktop third-party support, actual CLI auth schema, model entitlement, effective managed policy, billing and session continuity require verification on the recipient's installation. Linux was not host-tested; Windows has the manual guide path. The usage adapters are partial diagnostics, not billing reconciliation or complete prompt/subagent accounting.
+Desktop third-party support, actual CLI auth schema, model entitlement, effective managed policy, billing and session continuity require verification on the recipient's installation. The synthetic suite also passed on Ubuntu CI; Windows has the manual guide path. The usage adapters are partial diagnostics, not billing reconciliation or complete prompt/subagent accounting.
 
 The pattern scan is a useful release check, not a mathematical proof that arbitrary future edits contain no secrets. Keep real profiles and reports outside the release directory.

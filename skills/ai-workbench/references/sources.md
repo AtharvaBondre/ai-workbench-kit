@@ -11,7 +11,7 @@ Prepared **24 November 2026**. Treat this as a versioned starter kit, not a clai
 | Codex configuration | Official configuration and auth pages were reachable during preparation | Desktop effective state still requires UI verification |
 | Claude provider docs | Official URLs listed below; automated retrieval returned HTTP 403 during preparation | Provider examples require current documentation/installed-client validation before live use |
 | Desktop third-party controls | Guided workflow based on observed supported controls; version/edition dependent | No universal Desktop profile API, internal DB importer or silent account switch shipped |
-| Linux | Standard-library/POSIX design | Not host-tested in this release |
+| Linux | Synthetic suite passes on Ubuntu CI with Python 3.11 and 3.13 | Live provider/account changes not tested |
 | Windows | Manual documentation path | Automated CLI launch is deliberately unsupported |
 | Subscriptions / models / prices | No fixed entitlement or price assumed | Confirm in the actual account, region and deployment |
 
@@ -39,3 +39,5 @@ The launcher is conservative: it stops on known conflicting model/provider setti
 - [Python downloads](https://www.python.org/downloads/)
 
 If a URL moves, navigate from the provider's official documentation home. Do not substitute a third-party blog's schema or a copied secret-bearing configuration. Account purchase, plan names and model availability are external facts, not toolkit features.
+
+Public CI evidence: [initial four-job matrix](https://github.com/AtharvaBondre/ai-workbench-kit/actions/runs/45319287002). Check [the latest CI runs](https://github.com/AtharvaBondre/ai-workbench-kit/actions/workflows/ci.yml) for newer commits.
